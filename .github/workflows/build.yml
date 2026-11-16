@@ -1,0 +1,35 @@
+name: Build Pokédex Merger (3DS)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:20260610
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Unpack app source
+        run: |
+          base64 -d PokedexMerger_3DS_Source.tar.xz.b64 | tar -xJf -
+
+      - name: Test merger engine
+        run: make -C 3ds_pokedex_merger test
+
+      - name: Compile for Nintendo 3DS
+        run: make -C 3ds_pokedex_merger
+
+      - name: Upload installable app
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokedexMerger-3DSX
+          path: 3ds_pokedex_merger/PokedexMerger.3dsx
+          if-no-files-found: error
